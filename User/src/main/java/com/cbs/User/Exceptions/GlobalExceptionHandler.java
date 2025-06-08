@@ -22,17 +22,29 @@ public class GlobalExceptionHandler {
 
         ErrorResponseMessage errorResponseMessage = new ErrorResponseMessage(
                 ex.getMessage(),
-                HttpStatus.NO_CONTENT.value(),
+                HttpStatus.NOT_FOUND.value(),
                 LocalDateTime.now()
         );
-//        Map<String, Object> errorDetails = new HashMap<>();
-//        errorDetails.put("timestamp", LocalDateTime.now());
-//        errorDetails.put("status", HttpStatus.NOT_FOUND.value());
-//        errorDetails.put("error", "Not Found");
-//        errorDetails.put("message", ex.getMessage());
-//        errorDetails.put("path", request.getDescription(false).replace("uri=", "")); // Clean up path
 
         return new ResponseEntity<>(errorResponseMessage, HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(UserAlreadyExist.class)
+    public ResponseEntity<ErrorResponseMessage> handleUserAlreadyException(UserAlreadyExist ex, WebRequest request) {
+        ErrorResponseMessage errorResponseMessage = new ErrorResponseMessage(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(errorResponseMessage, HttpStatus.NOT_FOUND);
+    }
+   @ExceptionHandler(IncorrectPasswordException.class)
+    public ResponseEntity<ErrorResponseMessage> handlePasswordIncorrectException(IncorrectPasswordException ex, WebRequest request) {
+        ErrorResponseMessage errorResponseMessage = new ErrorResponseMessage(
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED.value(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(errorResponseMessage, HttpStatus.UNAUTHORIZED);
     }
 
 

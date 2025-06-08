@@ -7,6 +7,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -17,18 +20,29 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Size(min = 3,max = 20, message = "Name must be between 3 and 20 digits")
     @Column(nullable = false, length = 50)
+    @NotBlank(message = "Name number cannot be empty or null")
     private String firstName;
 
+    @Size(min = 3,max = 20, message = "Name must be between 3 and 20 digits")
+    @NotBlank(message = "lastName number cannot be empty or null")
     @Column(nullable = false, length = 50)
     private String lastName;
 
+
+    @NotBlank(message = "email number cannot be empty or null")
+    @Email(message = "Email should be a valid email address")
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+
     @Column(nullable = false)
+    @NotBlank(message = "Password cannot be empty or null")
     private String passwordHash;
 
+    @Size(min = 10, max = 10, message = "Phone number must be between 10 and 20 digits")
+    @NotBlank(message = "Phone number cannot be empty or null")
     @Column(nullable = false, unique = true, length = 20)
     private String phoneNumber;
 

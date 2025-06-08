@@ -16,6 +16,7 @@ import com.cbs.User.dto.UserRegistrationDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,46 +30,57 @@ import java.util.Optional;
 public class UserServiceImp implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserServiceImp.class);
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    ModelMapper modelMapper;
-    @Autowired
-    RideClient rideClient;
+    private final UserRepository userRepository;
+    private final RideClient rideClient;
+    private final PasswordEncoder passwordEncoder;
+    private final ModelMapper modelMapper;
+    private  PasswordEncoder encoder;
+    private final EmailServiceImp emailService;
 
-//    @Autowired
-//    EmailServiceImp emailService;
-     @Autowired
-    PasswordEncoder passwordEncoder;
+    @Autowired
+    UserServiceImp(UserRepository userRepository, PasswordEncoder passwordEncoder,RideClient rideClient,EmailServiceImp emailService,ModelMapper modelMapper) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+        this.rideClient = rideClient;
+        this.modelMapper = modelMapper;
+
+    }
+
+
     @Override
     public UserRegistrationDto registerUser(UserRegistrationDto userRegistrationDto) throws UserAlreadyExist {
 
-        if(userRepository.existsByEmail(userRegistrationDto.getEmail())) {
-            throw new UserAlreadyExist("User with email '" + userRegistrationDto.getEmail() + "' already exists.");
-        }
+     try{
+         User user = modelMapper.map(userRegistrationDto, User.class);
 
-        if(userRepository.existsByPhoneNumber(userRegistrationDto.getPhoneNumber())) {
-            throw new UserAlreadyExist("This Phone Number Already exist. Please try Another!!!");
-        }
+         Map<String, Object> templateVariables = new HashMap<>();
+         templateVariables.put("firstName", userRegistrationDto.getEmail());
+         templateVariables.put("email", userRegistrationDto.getEmail());
 
-        User user = modelMapper.map(userRegistrationDto, User.class);
+         String subject = "Welcome to ApexRide!";
 
-        // Prepare variables for the template
-//        Map<String, Object> templateVariables = new HashMap<>();
-//        templateVariables.put("firstName", userRegistrationDto.getEmail());
-//        templateVariables.put("email", userRegistrationDto.getEmail());
+         user.setPasswordHash(passwordEncoder.encode(userRegistrationDto.getPasswordHash()));
+         user.setLastProfileUpdate(LocalDateTime.now());
+         user.setRegistrationDate(LocalDateTime.now());
+         User Saveduser = userRepository.save(user);
+         UserRegistrationDto userSavedDto = modelMapper.map(Saveduser, UserRegistrationDto.class);
+         emailService.sendHtmlMail(userRegistrationDto.getEmail(), subject, "registration-welcome", templateVariables);
 
-        // Use the new HTML email method
-//        String subject = "Welcome to ApexRide!";
-        // Subject can still be static or from properties
-        user.setPasswordHash(passwordEncoder.encode(userRegistrationDto.getPasswordHash()));
-        user.setLastProfileUpdate(LocalDateTime.now());
-        user.setRegistrationDate(LocalDateTime.now());
-        User Saveduser = userRepository.save(user);
-        UserRegistrationDto userSavedDto = modelMapper.map(Saveduser, UserRegistrationDto.class);
-//        emailService.sendHtmlMail(userRegistrationDto.getEmail(), subject, "registration-welcome", templateVariables);
+         return userSavedDto;
 
-        return userSavedDto;
+     } catch (DataIntegrityViolationException e) {
+            if(e.getMostSpecificCause().getMessage().contains("gmail")){
+                throw new UserAlreadyExist("Email Already Exist");
+            } else if (e.getMostSpecificCause().getMessage().contains("Duplicate entry")) {
+                throw new UserAlreadyExist("Phone number already exist");
+            }
+            else  {
+                throw new UserAlreadyExist("Something went wrong");
+            }
+
+     }
+
 
 
     }
