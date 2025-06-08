@@ -1,5 +1,6 @@
 package com.cbs.Ride.Client;
 
+import com.cbs.Ride.Dto.ApiResponseDto;
 import com.cbs.Ride.Dto.AvailableDriverDto;
 import com.cbs.Ride.Dto.DriverDto;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -16,7 +17,7 @@ import java.util.List;
 @FeignClient(name = "DRIVER")
 public interface DriverClient {
     @GetMapping("/api/v1/driver/{id}")
-    DriverDto findDriverById(@PathVariable long id);
+    ApiResponseDto<DriverDto> findDriverById(@PathVariable long id);
 
     @GetMapping("/api/v1/driver/available")
     List<AvailableDriverDto> getAllAvailableDriver();

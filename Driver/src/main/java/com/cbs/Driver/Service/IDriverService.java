@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface IDriverService {
 
     ApiResponseDto<DriverRegistrationDto> registerDriver(DriverRegistrationDto driverRegistrationDto);
-  DriverProfileDto getDriverById (Long id);
+    ApiResponseDto<DriverProfileDto> getDriverById (Long id);
     ApiResponseDto<DriverLoginDto>  driverLogin(DriverLoginDto driverLoginDto);
     Optional<Driver> updateDriverStatus(Long id , Driver.DriverStatus status);
     List<AvailableDriverDto> getAllAvailableDriver();

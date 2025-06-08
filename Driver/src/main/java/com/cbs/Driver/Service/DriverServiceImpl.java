@@ -74,13 +74,13 @@ public class DriverServiceImpl implements IDriverService{
     }
 
     @Override
-    public DriverProfileDto getDriverById(Long id) {
+    public ApiResponseDto<DriverProfileDto> getDriverById(Long id) {
         Optional<Driver> driver = driverRepository.findById(id);
         if(driver.isEmpty()){
             throw  new DriverDoesNotExistException("Driver does Not Exist");
         }
         DriverProfileDto driverProfile = modelMapper.map(driver.get(), DriverProfileDto.class);  //map the driver Entity to driverProfileDTO
-        return driverProfile;
+        return new ApiResponseDto<>(true,"Driver Successfully Logged In",driverProfile);
     }
 
 

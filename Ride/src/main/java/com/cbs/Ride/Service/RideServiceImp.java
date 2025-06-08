@@ -2,10 +2,7 @@ package com.cbs.Ride.Service;
 
 import com.cbs.Ride.Client.DriverClient;
 import com.cbs.Ride.Client.UserClient;
-import com.cbs.Ride.Dto.AvailableDriverDto;
-import com.cbs.Ride.Dto.DriverDto;
-import com.cbs.Ride.Dto.RideDto;
-import com.cbs.Ride.Dto.UserDto;
+import com.cbs.Ride.Dto.*;
 import com.cbs.Ride.Entity.Rides;
 import com.cbs.Ride.Exception.UserDoesNotExistException;
 import com.cbs.Ride.Repository.RideRepository;
@@ -36,21 +33,21 @@ public class RideServiceImp implements IRideService{
 
 
     @Override
-    public String requestRide(long userID, String pickupLocation, String dropoffLocation) {
-        UserDto user = userClient.getUserById(userID);
-        if(user==null) {
+    public ApiResponseDto<RideDto> requestRide(long userID, String pickupLocation, String dropoffLocation) {
+        ApiResponseDto<UserDto> user = userClient.getUserById(userID);
+        if(user.getData()==null) {
             throw new UserDoesNotExistException("User Does Not Exist");
         }
         Rides ride = new Rides(userID , pickupLocation,dropoffLocation, LocalDateTime.now());
-        ride.setUserId(user.getId());
+        ride.setUserId(user.getData().getId());
         ride.setActualFare(100);
         ride.setEndTime(LocalDateTime.now());
         ride.setStatus(Rides.RideStatus.SEARCHING_DRIVER);
 
         List<AvailableDriverDto> availableDrivers = driverClient.getAllAvailableDriver();
         if(availableDrivers.isEmpty()){
-            log.error("No Driver Available for ride");
-            return "No Driver Available for ride";
+            return new ApiResponseDto<>("No Driver Available for ride",LocalDateTime.now(),null);
+
         }
         else{
             AvailableDriverDto assignedDriver = availableDrivers.getFirst();
@@ -58,7 +55,11 @@ public class RideServiceImp implements IRideService{
             ride.setStatus(Rides.RideStatus.DRIVER_ASSIGNED);
             driverClient.updateDriverStatus(assignedDriver.getId(), AvailableDriverDto.DriverStatus.ON_RIDE);
             rideRepository.save(ride);
-            return  "Driver "+assignedDriver.getFirstName()+ " has been Assigned";
+            RideDto rideDetailsDto = modelMapper.map(ride, RideDto.class);
+            rideDetailsDto.setDriverFullname(assignedDriver.getFirstName(),assignedDriver.getLastName());
+            rideDetailsDto.setUserFirstName(user.getData().getFirstName());
+            rideDetailsDto.setUserlastName(user.getData().getLastName());
+            return new ApiResponseDto<>("Ride booked Driver "+assignedDriver.getFirstName()+" has been Assigned",LocalDateTime.now(),rideDetailsDto);
         }
 
     }
@@ -78,22 +79,22 @@ public class RideServiceImp implements IRideService{
         RideDto rideDetails = modelMapper.map(ride, RideDto.class);
         if(ride.getUserId()!=null){
             try{
-                UserDto user = userClient.getUserById(ride.getUserId());
-                if(user==null){
+                ApiResponseDto<UserDto> user = userClient.getUserById(ride.getUserId());
+                if(user.getData()==null){
                     throw new UserDoesNotExistException("User Does not Exist ");
                 }
-                rideDetails.setUserFirstName(user.getFirstName());
-                rideDetails.setUserlastName(user.getLastName());
+                rideDetails.setUserFirstName(user.getData().getFirstName());
+                rideDetails.setUserlastName(user.getData().getLastName());
             } catch (UserDoesNotExistException e) {
                 throw new UserDoesNotExistException("User Does not Exist");
             }
         }
         if(ride.getDriverId()!=null){
             try{
-                DriverDto driver = driverClient.findDriverById(ride.getDriverId());
+                ApiResponseDto<DriverDto> driver = driverClient.findDriverById(ride.getDriverId());
 
-                System.out.println(driver.getFirstName()+ "  "+driver.getFirstName());
-                rideDetails.setDriverFullname(driver.getFirstName(),driver.getLastName());
+
+                rideDetails.setDriverFullname(driver.getData().getFirstName(),driver.getData().getLastName());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

@@ -1,5 +1,6 @@
 package com.cbs.Ride.Controller;
 
+import com.cbs.Ride.Dto.ApiResponseDto;
 import com.cbs.Ride.Dto.RideDto;
 import com.cbs.Ride.Entity.Rides;
 import com.cbs.Ride.Exception.UserDoesNotExistException;
@@ -18,9 +19,9 @@ public class RideController {
     @Autowired
     IRideService rideService;
 
-    @PostMapping
-    public ResponseEntity<String> createRide (@RequestParam long userID,   @RequestParam String pickupLocation, @RequestParam String dropoffLocation){
-        return new ResponseEntity<String>(rideService.requestRide(userID, pickupLocation,dropoffLocation), HttpStatus.OK);
+    @PostMapping("/book-ride/{userID}")
+    public ResponseEntity<ApiResponseDto<RideDto>> createRide (@PathVariable long userID, @RequestParam String pickupLocation, @RequestParam String dropoffLocation){
+        return new ResponseEntity<>(rideService.requestRide(userID, pickupLocation,dropoffLocation), HttpStatus.OK);
     }
     @GetMapping("/users/{id}")
     public ResponseEntity<List<RideDto>> getUsersRides(@PathVariable long id) throws UserDoesNotExistException {

@@ -26,7 +26,7 @@ public class DriverController {
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<DriverProfileDto> findDriverById(@PathVariable long id){
+    ResponseEntity<ApiResponseDto<DriverProfileDto>> findDriverById(@PathVariable long id){
         return new ResponseEntity<>(driverService.getDriverById(id),HttpStatus.OK);
     }
 
